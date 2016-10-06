@@ -2,8 +2,6 @@
 
 key=$1
 value=$2
-echo "key $key"
-echo "value $value"
 
 if [[ "-a" == $key ]]; then
     azure account set $value
