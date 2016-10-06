@@ -1,0 +1,217 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "springActiveProfiles": {
+        "type": "string",
+        "metadata": {
+            "description": "Name of the Spring profiles to enable."
+        }
+        },
+        "mongoDbUri": {
+        "type": "string",
+        "metadata": {
+            "description": "URI connection sring for MongoDB."
+        }
+        },
+        "googleClientId": {
+        "type": "string",
+        "metadata": {
+            "description": "Google social login client id."
+        }
+        },
+        "googleClientSecret": {
+        "type": "string",
+        "metadata": {
+            "description": "Google social login client secret."
+        }
+        },
+        "facebookClientId": {
+        "type": "string",
+        "metadata": {
+            "description": "Facebook social login client id."
+        }
+        },
+        "facebookClientSecret": {
+        "type": "string",
+        "metadata": {
+            "description": "Facebook social login client secret."
+        }
+        },
+        "twitterClientId": {
+        "type": "string",
+        "metadata": {
+            "description": "Twitter social login client id."
+        }
+        },
+        "twitterClientSecret": {
+        "type": "string",
+        "metadata": {
+            "description": "Twitter social login client secret."
+        }
+        },
+        "hostingPlanName": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Name of the hosting plan to use in Azure."
+            }
+        },
+        "webSiteName": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Name of the Azure Web app to create."
+            }
+        },
+        "slotName": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "stage",
+            "metadata": {
+                "description": "Name of the slot to create."
+            }
+        },
+        "skuName": {
+            "type": "string",
+            "defaultValue": "F1",
+            "allowedValues": [
+                "F1",
+                "D1",
+                "B1",
+                "B2",
+                "B3",
+                "S1",
+                "S2",
+                "S3",
+                "P1",
+                "P2",
+                "P3",
+                "P4"
+            ],
+            "metadata": {
+                "description": "Describes plan's pricing tier and instance size. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+            }
+        },
+        "skuCapacity": {
+            "type": "int",
+            "defaultValue": 1,
+            "minValue": 1,
+            "metadata": {
+                "description": "Describes plan's instance count"
+            }
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-08-01",
+            "name": "[parameters('hostingPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "HostingPlan"
+            },
+            "sku": {
+                "name": "[parameters('skuName')]",
+                "capacity": "[parameters('skuCapacity')]"
+            },
+            "properties": {
+                "name": "[parameters('hostingPlanName')]"
+            }
+        },
+        {
+            "apiVersion": "2015-08-01",
+            "name": "[parameters('webSiteName')]",
+            "type": "Microsoft.Web/sites",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]": "Resource",
+                "displayName": "Website"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]"
+            ],
+            "properties": {
+                "name": "[parameters('webSiteName')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+                "siteConfig": {
+                    "AlwaysOn": "true",
+                    "appSettings": [
+                        {
+                            "Name": "SPRING_PROFILES_ACTIVE",
+                            "Value": "[parameters('springActiveProfiles')]"
+                        },
+                        {
+                            "Name": "SPRING_DATA_MONGODB_URI",
+                            "Value": "[parameters('mongoDbUri')]"
+                        },
+                        {
+                            "Name": "SPRING_SOCIAL_GOOGLE_CLIENTID",
+                            "Value": "[parameters('googleClientId')]"
+                        },
+                        {
+                            "Name": "SPRING_SOCIAL_GOOGLE_CLIENTSECRET",
+                            "Value": "[parameters('googleClientSecret')]"
+                        },
+                        {
+                            "Name": "SPRING_SOCIAL_FACEBOOK_CLIENTID",
+                            "Value": "[parameters('facebookClientId')]"
+                        },
+                        {
+                            "Name": "SPRING_SOCIAL_FACEBOOK_CLIENTSECRET",
+                            "Value": "[parameters('facebookClientSecret')]"
+                        },
+                        {
+                            "Name": "SPRING_SOCIAL_TWITTER_CLIENTID",
+                            "Value": "[parameters('twitterClientId')]"
+                        },
+                        {
+                            "Name": "SPRING_SOCIAL_TWITTER_CLIENTSECRET",
+                            "Value": "[parameters('twitterClientSecret')]"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2015-04-01",
+                    "name": "[parameters('slotName')]",
+                    "type": "slots",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('webSiteName'))]"
+                    ],
+                    "properties": {},
+                    "resources": [
+                        {
+                            "apiVersion": "2015-08-01",
+                            "name": "web",
+                            "type": "config",
+                            "dependsOn": [
+                                "[resourceId('Microsoft.Web/Sites/Slots', parameters('webSiteName'), parameters('slotName'))]"
+                            ],
+                            "properties": {
+                                "javaVersion": "1.8",
+                                "javaContainer": "TOMCAT",
+                                "javaContainerVersion": "8.0"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "apiVersion": "2015-08-01",
+                    "name": "web",
+                    "type": "config",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', parameters('webSiteName'))]"
+                    ],
+                    "properties": {
+                        "javaVersion": "1.8",
+                        "javaContainer": "TOMCAT",
+                        "javaContainerVersion": "8.0"
+                    }
+                }
+            ]
+        }        
+    ]
+}

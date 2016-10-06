@@ -1,0 +1,39 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "springActiveProfiles": {
+      "value": "prod"
+    },
+    "mongoDbUri": {
+      "value": "TODO"
+    },
+    "googleClientId": {
+        "value": "TODO"
+    },
+    "googleClientSecret": {
+        "value": "TODO"
+    },
+    "facebookClientId": {
+        "value": "TODO"
+    },
+    "facebookClientSecret": {
+        "value": "TODO"
+    },
+    "twitterClientId": {
+        "value": "TODO"
+    },
+    "twitterClientSecret": {
+        "value": "TODO"
+    },    
+    "hostingPlanName": {
+        "value": "CommentsHostingPlan"
+    },
+    "skuName": {
+        "value": "S2"
+    },
+    "webSiteName": {
+        "value": "talk-comments"
+    }
+  }
+}
